@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 class Parser {
-  Map<String, Function()> parseCode(String code) {
+  Map<String, Function(List<dynamic>)> parseCode(String code) {
     final RegExp functionRegExp = RegExp(
-        r'fn\s+(\w+)\s*\(\s*\)\s*:\s*(void|int|String)\s*{\s*([^}]*)\s*}');
+        r'fn\s+(\w+)\s*\(\s*([^)]*)\s*\)\s*:\s*(void|int|String)\s*{\s*([^}]*)\s*}');
 
     final RegExp variableRegExp =
         RegExp(r'(?:let\s+)?(\w+)\s*:\s*(\w+)\s*=\s*([^;]+)(;|\n)');
@@ -14,7 +14,7 @@ class Parser {
     final functionMatches = functionRegExp.allMatches(code);
     final variableMatches = variableRegExp.allMatches(code);
 
-    final functions = <String, Function()>{};
+    final functions = <String, Function(List<dynamic>)>{};
     final variables = <String, dynamic>{};
 
     for (final match in variableMatches) {
@@ -28,9 +28,19 @@ class Parser {
 
     for (final match in functionMatches) {
       final functionName = match.group(1);
-      final functionBody = match.group(3);
+      final parameterList = match.group(2);
+      final returnType = match.group(3);
+      final functionBody = match.group(4);
 
-      functions[functionName!] = () {
+      functions[functionName!] = (List<dynamic> args) {
+        final paramMap = <String, dynamic>{};
+        if (parameterList != null && args.length > 0) {
+          final parameters = parameterList.split(',');
+          for (int i = 0; i < parameters.length; i++) {
+            paramMap[parameters[i].trim()] = args[i];
+          }
+        }
+
         final lines = functionBody?.split('\n');
         for (final line in lines!) {
           if (line.trim().isEmpty) continue;
@@ -78,4 +88,23 @@ class Parser {
         throw ArgumentError('Type $type not supported');
     }
   }
+}
+
+void main() {
+  final parser = Parser();
+  final code = '''
+    fn printMessage(message: String) {
+      print(message);
+    }
+    
+    fn test(): void {
+      let message: String = "hello";
+    
+      printMessage(message);
+    }
+  ''';
+
+  final functions = parser.parseCode(code);
+
+  functions['test']!([]);
 }

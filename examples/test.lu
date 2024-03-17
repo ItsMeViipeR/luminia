@@ -1,0 +1,9 @@
+fn printMessage(message: String) {
+  print(message);
+}
+
+fn test(): void {
+  let message: String = "hello";
+
+  printMessage(message);
+}

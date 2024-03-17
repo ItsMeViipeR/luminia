@@ -1,4 +1,4 @@
-import "package:testlang/lang/parser.dart";
+import "package:luminia/lang/parser.dart";
 import 'dart:io';
 
 void main() {
@@ -8,7 +8,7 @@ void main() {
 
     if (result.containsKey('test')) {
       final function = result['test'];
-      function!();
+      function!([]);
     }
   });
 }
